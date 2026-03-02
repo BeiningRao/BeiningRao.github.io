@@ -1,29 +1,38 @@
-/* global Zotero, PathUtils */
+/* global Zotero, PathUtils, IOUtils */
 
 const PREF_BRANCH = "extensions.zotero-auto-ingest-organizer.";
-const DEFAULT_SCAN_INTERVAL_SEC = 30;
-const SUPPORTED_EXTENSIONS = new Set(["pdf"]);
+const VERSION = "0.2.0";
 
-const KEYWORD_COLLECTION_MAP = {
-  "llm": ["AI", "LLM"],
-  "large language": ["AI", "LLM"],
-  "transformer": ["AI", "NLP"],
-  "nlp": ["AI", "NLP"],
-  "multimodal": ["AI", "Multimodal"],
-  "graph": ["Graph", "GNN"],
-  "gnn": ["Graph", "GNN"],
-  "medical": ["Medical", "Clinical"],
-  "biomedical": ["Medical", "Clinical"],
-  "vision": ["CV"],
-  "diffusion": ["CV", "Generation"]
+const DEFAULTS = {
+  enabled: true,
+  scanIntervalSec: 30,
+  downloadDir: PathUtils.join(PathUtils.homeDir, "Downloads"),
+  metadataProvider: "crossref", // crossref | none
+  summarySentences: 3,
+  classifyRulesJSON: JSON.stringify({
+    llm: "AI/LLM",
+    "large language": "AI/LLM",
+    transformer: "AI/NLP",
+    nlp: "AI/NLP",
+    multimodal: "AI/Multimodal",
+    graph: "Graph/GNN",
+    gnn: "Graph/GNN",
+    medical: "Medical/Clinical",
+    biomedical: "Medical/Clinical",
+    vision: "CV",
+    diffusion: "CV/Generation"
+  })
 };
+
+const SUPPORTED_EXTENSIONS = new Set(["pdf"]);
 
 let timerId = null;
 let observerId = null;
 
 function getPref(key, fallback) {
   try {
-    return Zotero.Prefs.get(PREF_BRANCH + key, true);
+    const value = Zotero.Prefs.get(PREF_BRANCH + key, true);
+    return value === undefined || value === null ? fallback : value;
   } catch (_err) {
     return fallback;
   }
@@ -33,39 +42,75 @@ function setPref(key, value) {
   Zotero.Prefs.set(PREF_BRANCH + key, value, true);
 }
 
+function ensureDefaultPrefs() {
+  for (const [key, value] of Object.entries(DEFAULTS)) {
+    if (getPref(key, null) === null) {
+      setPref(key, value);
+    }
+  }
+}
+
 function getDownloadDir() {
-  return getPref("downloadDir", PathUtils.join(PathUtils.homeDir, "Downloads"));
+  return String(getPref("downloadDir", DEFAULTS.downloadDir));
 }
 
 function getScanInterval() {
-  return Number(getPref("scanIntervalSec", DEFAULT_SCAN_INTERVAL_SEC)) || DEFAULT_SCAN_INTERVAL_SEC;
+  return Number(getPref("scanIntervalSec", DEFAULTS.scanIntervalSec)) || DEFAULTS.scanIntervalSec;
+}
+
+function getMetadataProvider() {
+  return String(getPref("metadataProvider", DEFAULTS.metadataProvider)).toLowerCase();
+}
+
+function getSummarySentenceCount() {
+  const count = Number(getPref("summarySentences", DEFAULTS.summarySentences));
+  return Number.isFinite(count) && count > 0 ? Math.min(count, 10) : DEFAULTS.summarySentences;
+}
+
+function getClassificationMap() {
+  const raw = String(getPref("classifyRulesJSON", DEFAULTS.classifyRulesJSON));
+  try {
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object") {
+      throw new Error("classifyRulesJSON 不是对象");
+    }
+
+    const cleanedMap = {};
+    for (const [keyword, path] of Object.entries(parsed)) {
+      if (!keyword || typeof keyword !== "string") continue;
+      if (!path || typeof path !== "string") continue;
+      cleanedMap[keyword.toLowerCase().trim()] = path
+        .split("/")
+        .map((s) => s.trim())
+        .filter(Boolean)
+        .join("/");
+    }
+    return cleanedMap;
+  } catch (err) {
+    Zotero.logError(`[auto-ingest] classifyRulesJSON 解析失败，使用默认规则: ${err}`);
+    return JSON.parse(DEFAULTS.classifyRulesJSON);
+  }
 }
 
 async function startup() {
-  Zotero.debug("[auto-ingest] startup");
-  if (!getPref("enabled", null)) {
-    setPref("enabled", true);
-  }
-  if (!getPref("scanIntervalSec", null)) {
-    setPref("scanIntervalSec", DEFAULT_SCAN_INTERVAL_SEC);
-  }
-  if (!getPref("downloadDir", null)) {
-    setPref("downloadDir", getDownloadDir());
-  }
+  Zotero.debug(`[auto-ingest] startup v${VERSION}`);
+  ensureDefaultPrefs();
 
-  observerId = Zotero.Notifier.registerObserver({
-    async notify(action, type, ids) {
-      if (action !== "add" || type !== "item") return;
-      for (const id of ids) {
-        const item = await Zotero.Items.getAsync(id);
-        if (item?.isRegularItem()) {
-          await enrichItemByMetadata(item);
-          await autoClassifyItem(item);
-          await createSummaryNote(item);
+  observerId = Zotero.Notifier.registerObserver(
+    {
+      async notify(action, type, ids) {
+        if (action !== "add" || type !== "item") return;
+        for (const id of ids) {
+          const item = await Zotero.Items.getAsync(id);
+          if (item?.isRegularItem()) {
+            await processItem(item);
+          }
         }
       }
-    }
-  }, ["item"], "auto-ingest-organizer-observer");
+    },
+    ["item"],
+    "auto-ingest-organizer-observer"
+  );
 
   await scanAndImportDownloads();
   timerId = setInterval(scanAndImportDownloads, getScanInterval() * 1000);
@@ -83,11 +128,17 @@ function shutdown() {
   }
 }
 
+async function processItem(item) {
+  await enrichItemByMetadata(item);
+  await autoClassifyItem(item);
+  await createSummaryNote(item);
+}
+
 async function scanAndImportDownloads() {
-  if (!getPref("enabled", true)) return;
+  if (!getPref("enabled", DEFAULTS.enabled)) return;
+
   const dir = getDownloadDir();
-  const importedFiles = JSON.parse(getPref("importedFiles", "[]") || "[]");
-  const importedSet = new Set(importedFiles);
+  const importedSet = new Set(safeParseJSONArray(getPref("importedFiles", "[]")));
 
   let entries = [];
   try {
@@ -117,10 +168,7 @@ async function scanAndImportDownloads() {
         await attachment.saveTx();
       }
 
-      await enrichItemByMetadata(parent);
-      await autoClassifyItem(parent);
-      await createSummaryNote(parent);
-
+      await processItem(parent);
       importedSet.add(path);
     } catch (err) {
       Zotero.logError(`[auto-ingest] 导入失败: ${path} -> ${err}`);
@@ -130,12 +178,24 @@ async function scanAndImportDownloads() {
   setPref("importedFiles", JSON.stringify([...importedSet]));
 }
 
+function safeParseJSONArray(raw) {
+  try {
+    const parsed = JSON.parse(String(raw || "[]"));
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (_err) {
+    return [];
+  }
+}
+
 function fileNameToTitle(path) {
   const name = path.split("/").pop()?.replace(/\.pdf$/i, "") || "Untitled";
   return name.replace(/[._-]+/g, " ").replace(/\s+/g, " ").trim();
 }
 
 async function enrichItemByMetadata(item) {
+  const provider = getMetadataProvider();
+  if (provider === "none") return;
+
   const title = item.getField("title")?.trim();
   if (!title) return;
 
@@ -143,18 +203,27 @@ async function enrichItemByMetadata(item) {
     const query = encodeURIComponent(title);
     const response = await fetch(`https://api.crossref.org/works?query.title=${query}&rows=1`);
     if (!response.ok) return;
+
     const data = await response.json();
     const work = data?.message?.items?.[0];
     if (!work) return;
 
-    const abstract = (work.abstract || "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+    const abstract = cleanupAbstract(work.abstract || "");
     const officialTitle = work.title?.[0]?.trim();
+    const journal = work["container-title"]?.[0]?.trim();
+    const doi = work.DOI?.trim();
 
     if (officialTitle && officialTitle.length > title.length / 2) {
       item.setField("title", officialTitle);
     }
-    if (abstract) {
+    if (abstract && !item.getField("abstractNote")) {
       item.setField("abstractNote", abstract);
+    }
+    if (journal && !item.getField("publicationTitle")) {
+      item.setField("publicationTitle", journal);
+    }
+    if (doi && !item.getField("DOI")) {
+      item.setField("DOI", doi);
     }
 
     await item.saveTx();
@@ -163,18 +232,27 @@ async function enrichItemByMetadata(item) {
   }
 }
 
+function cleanupAbstract(abstract) {
+  return String(abstract || "")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 async function autoClassifyItem(item) {
+  const classificationMap = getClassificationMap();
   const content = `${item.getField("title") || ""} ${item.getField("abstractNote") || ""}`.toLowerCase();
   if (!content.trim()) return;
 
   const collectionPaths = new Set();
-  for (const [keyword, path] of Object.entries(KEYWORD_COLLECTION_MAP)) {
+  for (const [keyword, pathString] of Object.entries(classificationMap)) {
     if (content.includes(keyword)) {
-      collectionPaths.add(path.join("/"));
+      collectionPaths.add(pathString);
     }
   }
 
   for (const pathStr of collectionPaths) {
+    if (!pathStr) continue;
     const collection = await ensureCollectionPath(pathStr);
     if (!item.inCollection(collection.id)) {
       item.addToCollection(collection.id);
@@ -187,7 +265,7 @@ async function autoClassifyItem(item) {
 }
 
 async function ensureCollectionPath(pathStr) {
-  const parts = pathStr.split("/");
+  const parts = pathStr.split("/").filter(Boolean);
   let parentID = null;
   let current = null;
 
@@ -213,9 +291,10 @@ async function createSummaryNote(item) {
   const abstract = item.getField("abstractNote")?.trim();
   if (!abstract) return;
 
+  const sentenceCount = getSummarySentenceCount();
   const firstSentences = abstract
     .split(/(?<=[.!?。！？])\s+/)
-    .slice(0, 3)
+    .slice(0, sentenceCount)
     .join(" ");
 
   const noteText = [
@@ -225,6 +304,7 @@ async function createSummaryNote(item) {
     `<ul>`,
     `<li><b>标题：</b>${escapeHtml(item.getField("title") || "")}</li>`,
     `<li><b>来源：</b>${escapeHtml(item.getField("publicationTitle") || "待补全")}</li>`,
+    `<li><b>DOI：</b>${escapeHtml(item.getField("DOI") || "待补全")}</li>`,
     `</ul>`
   ].join("\n");
 
@@ -244,7 +324,7 @@ async function createSummaryNote(item) {
 }
 
 function escapeHtml(text) {
-  return text
+  return String(text)
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")

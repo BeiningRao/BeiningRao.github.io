@@ -1,41 +1,116 @@
 # zotero-auto-ingest-organizer
 
-一个 Zotero 7 插件示例，用于：
+一个 **Zotero 7 插件（可发布版原型）**，用于：
 
 1. 定时扫描下载目录中的 PDF；
 2. 自动导入到 Zotero；
-3. 根据标题到 Crossref 拉取元数据（含摘要）；
+3. 通过 Crossref 自动补全题名/摘要/期刊/DOI；
 4. 根据“标题 + 摘要”关键词自动归入集合（文件夹）；
-5. 自动创建“摘要笔记”并挂到条目下。
+5. 自动创建结构化“摘要笔记”。
 
-## 安装（开发模式）
+---
 
-1. 打开 Zotero 7。
-2. 进入 `工具 -> 插件`。
-3. 右上角齿轮选择 `Install Add-on From File...`。
-4. 将 `addon/` 打包成 `.xpi` 后安装。
+## 一、快速安装（Windows / macOS / Linux）
 
-> 打包方式：在 `addon` 目录内执行 `zip -r ../zotero-auto-ingest-organizer.xpi .`
+### 1) 打包为 xpi
 
-## 默认行为
+在仓库根目录执行：
+
+```bash
+cd addon
+zip -r ../zotero-auto-ingest-organizer.xpi .
+```
+
+### 2) 安装到 Zotero
+
+1. 打开 Zotero 7
+2. `工具 -> 插件`
+3. 右上角齿轮 `Install Add-on From File...`
+4. 选择 `zotero-auto-ingest-organizer.xpi`
+5. 重启 Zotero
+
+---
+
+## 二、默认行为
 
 - 扫描目录：`~/Downloads`
 - 扫描频率：30 秒
 - 支持文件：`.pdf`
+- 元数据来源：Crossref
+- 摘要笔记句子数：3
 
-## 自动分类规则
+---
 
-关键词到集合路径映射位于 `addon/chrome/content/bootstrap.js`：
+## 三、可配置项（发布前建议）
 
-- `llm` -> `AI/LLM`
-- `transformer` -> `AI/NLP`
-- `medical` -> `Medical/Clinical`
-- `vision` -> `CV`
+本插件将配置保存在 Zotero Prefs（前缀：`extensions.zotero-auto-ingest-organizer.`）。
 
-可按你的学科方向修改。
+| Key | 类型 | 默认值 | 说明 |
+|---|---|---|---|
+| `enabled` | bool | `true` | 是否启用自动扫描 |
+| `downloadDir` | string | `~/Downloads` | 下载扫描目录 |
+| `scanIntervalSec` | number | `30` | 扫描间隔（秒） |
+| `metadataProvider` | string | `crossref` | `crossref` 或 `none` |
+| `summarySentences` | number | `3` | 摘要笔记使用前 N 句 |
+| `classifyRulesJSON` | JSON string | 内置规则 | 关键词到集合路径映射 |
 
-## 注意事项
+### `classifyRulesJSON` 示例
 
-- 这是“可运行的最小原型”，用于快速验证流程。
-- 元数据依赖 Crossref 数据质量；如标题不规范，命中率会下降。
-- 若你希望“下载瞬间”而非“定时扫描”导入，可进一步接入浏览器 connector 下载事件或系统文件监听（不同平台实现不同）。
+```json
+{
+  "llm": "AI/LLM",
+  "transformer": "AI/NLP",
+  "medical": "Medical/Clinical",
+  "vision": "CV"
+}
+```
+
+---
+
+## 四、调试与日志
+
+- 出错日志会写入 Zotero 日志（关键词：`[auto-ingest]`）。
+- 常见问题排查：
+  - **没有自动导入**：检查 `downloadDir` 是否存在、是否是 PDF。
+  - **没有摘要**：Crossref 不一定有摘要，属于数据源限制。
+  - **没有分类**：检查 `classifyRulesJSON` 是否是合法 JSON。
+
+---
+
+## 五、发布到 GitHub（你问的那部分）
+
+> 可以在 **PowerShell**、**Git Bash**、**Windows Terminal** 任一终端执行。
+
+### 第一次发布
+
+```bash
+git remote add origin git@github.com:<你的用户名>/<你的仓库名>.git
+# 或 https
+# git remote add origin https://github.com/<你的用户名>/<你的仓库名>.git
+
+git push -u origin work
+```
+
+### 如果提示 `remote origin already exists`
+
+```bash
+git remote set-url origin git@github.com:<你的用户名>/<你的仓库名>.git
+# 或 https 地址
+
+git push -u origin work
+```
+
+---
+
+## 六、GitHub Release（建议）
+
+1. 打标签：
+
+```bash
+git tag -a v0.2.0 -m "zotero auto ingest organizer v0.2.0"
+git push origin v0.2.0
+```
+
+2. 在 GitHub 仓库 `Releases` 页面创建 `v0.2.0`。
+3. 上传 `zotero-auto-ingest-organizer.xpi` 作为附件。
+
