@@ -1,0 +1,17 @@
+{
+  "manifest_version": 2,
+  "name": "zotero-auto-ingest-organizer",
+  "version": "0.1.0",
+  "description": "自动导入下载文献并按标题和摘要分类，生成摘要笔记。",
+  "applications": {
+    "zotero": {
+      "id": "zotero-auto-ingest-organizer@local",
+      "strict_min_version": "7.0"
+    }
+  },
+  "background": {
+    "scripts": [
+      "chrome/content/bootstrap.js"
+    ]
+  }
+}
