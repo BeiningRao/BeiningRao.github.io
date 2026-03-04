@@ -111,10 +111,23 @@ git push -u origin work
 1. 打标签：
 
 ```bash
-git tag -a v0.2.2 -m "zotero auto ingest organizer v0.2.2"
-git push origin v0.2.2
+git tag -a v0.2.3 -m "zotero auto ingest organizer v0.2.3"
+git push origin v0.2.3
 ```
 
-2. 在 GitHub 仓库 `Releases` 页面创建 `v0.2.2`。
+2. 在 GitHub 仓库 `Releases` 页面创建 `v0.2.3`。
 3. 上传 `zotero-auto-ingest-organizer.xpi` 作为附件。
 
+
+
+## 七、安装失败时的快速自检（Windows）
+
+```powershell
+# 1) 检查你安装的确实是 .xpi
+Get-ChildItem D:\code\beining.github.io\zotero-auto-ingest-organizer.*
+
+# 2) 检查包内根目录是否有 manifest.json 和 bootstrap.js
+tar -tf D:\code\beining.github.io\zotero-auto-ingest-organizer.xpi | Select-Object -First 20
+```
+
+若 `tar -tf` 里没有 `manifest.json` / `bootstrap.js`，说明打包目录不对（必须在 `addon` 目录里执行打包）。
