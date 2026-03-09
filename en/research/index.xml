@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Research Notes on Beining's Space</title><link>https://beiningrao.github.io/en/research/</link><description>Recent content in Research Notes on Beining's Space</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Mon, 09 Mar 2026 00:00:00 +0000</lastBuildDate><atom:link href="https://beiningrao.github.io/en/research/index.xml" rel="self" type="application/rss+xml"/><item><title>Example: Paper Reading Note</title><link>https://beiningrao.github.io/en/research/example-paper-note/</link><pubDate>Mon, 09 Mar 2026 00:00:00 +0000</pubDate><guid>https://beiningrao.github.io/en/research/example-paper-note/</guid><description>&lt;h2 id="paper-info"&gt;Paper Info&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Title&lt;/strong&gt;: Example Paper Title&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Authors&lt;/strong&gt;: Author et al.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Published&lt;/strong&gt;: Conference/Journal, 2026&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id="main-contributions"&gt;Main Contributions&lt;/h2&gt;
+&lt;ol&gt;
+&lt;li&gt;Contribution 1&lt;/li&gt;
+&lt;li&gt;Contribution 2&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h2 id="key-methods"&gt;Key Methods&lt;/h2&gt;
+&lt;p&gt;Record the core methodology of the paper here&amp;hellip;&lt;/p&gt;
+&lt;h2 id="reflections"&gt;Reflections&lt;/h2&gt;
+&lt;p&gt;Write your thoughts and evaluations here&amp;hellip;&lt;/p&gt;</description></item></channel></rss>

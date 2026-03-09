@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Course Notes on Beining's Space</title><link>https://beiningrao.github.io/en/courses/</link><description>Recent content in Course Notes on Beining's Space</description><generator>Hugo</generator><language>en-us</language><lastBuildDate>Mon, 09 Mar 2026 00:00:00 +0000</lastBuildDate><atom:link href="https://beiningrao.github.io/en/courses/index.xml" rel="self" type="application/rss+xml"/><item><title>Example: Core Theorems in Linear Algebra</title><link>https://beiningrao.github.io/en/courses/example-linear-algebra/</link><pubDate>Mon, 09 Mar 2026 00:00:00 +0000</pubDate><guid>https://beiningrao.github.io/en/courses/example-linear-algebra/</guid><description>&lt;h2 id="course-info"&gt;Course Info&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Course&lt;/strong&gt;: Linear Algebra&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Semester&lt;/strong&gt;: Spring 20XX&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id="core-concepts"&gt;Core Concepts&lt;/h2&gt;
+&lt;h3 id="1-vector-spaces"&gt;1. Vector Spaces&lt;/h3&gt;
+&lt;p&gt;Definition and properties of vector spaces&amp;hellip;&lt;/p&gt;
+&lt;h3 id="2-eigenvalues--eigenvectors"&gt;2. Eigenvalues &amp;amp; Eigenvectors&lt;/h3&gt;
+&lt;p&gt;Key theorems and derivations&amp;hellip;&lt;/p&gt;
+&lt;h2 id="summary"&gt;Summary&lt;/h2&gt;
+&lt;p&gt;Key takeaways from this chapter&amp;hellip;&lt;/p&gt;</description></item></channel></rss>
