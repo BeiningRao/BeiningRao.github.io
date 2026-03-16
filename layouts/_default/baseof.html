@@ -43,6 +43,9 @@
   <footer class="site-footer">
     <div class="footer-inner">
       <p>&copy; {{ now.Year }} {{ .Site.Params.author }}</p>
+      {{ with .Site.Params.email }}
+      <p><a href="mailto:{{ . }}">{{ . }}</a></p>
+      {{ end }}
     </div>
   </footer>
 

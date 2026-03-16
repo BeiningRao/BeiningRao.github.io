@@ -5,10 +5,18 @@
   <div class="hero-content">
     <img class="hero-seal" src="{{ "img/seal.png" | relURL }}" alt="饶倍宁印">
     <h1 class="hero-title">{{ .Site.Params.description }}</h1>
+    {{ with .Site.Params.identity }}
+    <p class="hero-identity">{{ . }}</p>
+    {{ end }}
     <div class="hero-divider">
       <span class="divider-dot">◆</span>
     </div>
     <p class="hero-motto">{{ .Site.Params.motto }}</p>
+    <div class="hero-quicklinks">
+      <a href="{{ "resume/" | relLangURL }}" class="hero-link hero-link-primary">{{ .Site.Params.quicklinkPrimary }}</a>
+      <a href="{{ "research/" | relLangURL }}" class="hero-link">{{ .Site.Params.quicklinkResearch }}</a>
+      <a href="{{ "creative/" | relLangURL }}" class="hero-link">{{ .Site.Params.quicklinkCreative }}</a>
+    </div>
   </div>
   <div class="hero-scroll-hint">
     <span>▼</span>
@@ -18,6 +26,9 @@
 <section class="modules">
   <div class="section-heading">
     <h2>踏 · 四方</h2>
+    {{ with .Site.Params.modulesIntro }}
+    <p class="section-intro">{{ . }}</p>
+    {{ end }}
   </div>
   <div class="module-grid">
     <a href="{{ "resume/" | relLangURL }}" class="module-card">
@@ -35,13 +46,13 @@
     <a href="{{ "research/" | relLangURL }}" class="module-card">
       <div class="card-brush"></div>
       <div class="module-icon">研</div>
-      <h2>科研笔记</h2>
+      <h2>研究笔记与论文思考</h2>
       <p>论文笔记 · 实验记录 · 学术思考</p>
     </a>
     <a href="{{ "courses/" | relLangURL }}" class="module-card">
       <div class="card-brush"></div>
       <div class="module-icon">学</div>
-      <h2>课程理论合集</h2>
+      <h2>课程笔记与理论整理</h2>
       <p>课程笔记 · 理论总结 · 知识梳理</p>
     </a>
   </div>
