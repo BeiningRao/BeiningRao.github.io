@@ -42,6 +42,11 @@ defaultContentLanguageInSubdir = true
       url = '/courses/'
       weight = 5
 
+    [[languages.zh.menu.main]]
+      name = '我的所有研究和辅助学习网站'
+      url = '/research-desk/'
+      weight = 6
+
   [languages.en]
     languageCode = 'en-us'
     languageName = 'English'
@@ -75,6 +80,11 @@ defaultContentLanguageInSubdir = true
       name = 'Course Notes'
       url = '/courses/'
       weight = 5
+
+    [[languages.en.menu.main]]
+      name = 'Research and Learning Resources'
+      url = '/research-desk/'
+      weight = 6
 
 [markup]
   [markup.goldmark]
