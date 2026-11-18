@@ -6,6 +6,7 @@ defaultContentLanguageInSubdir = true
 [params]
   author = 'Beining'
   email = 'wils-e@sjtu.edu.cn'
+  researchDeskURL = 'https://beining-research-desk.kotaka.chatgpt.site/'
 
 [languages]
   [languages.zh]
@@ -21,6 +22,8 @@ defaultContentLanguageInSubdir = true
       quicklinkPrimary = '先看我是谁'
       quicklinkResearch = '研究笔记'
       quicklinkCreative = '文艺创作'
+      researchDeskTitle = '研究工作台'
+      researchDeskDescription = '登录后查看我的项目网站'
     [[languages.zh.menu.main]]
       name = '首页'
       url = '/'
@@ -60,6 +63,8 @@ defaultContentLanguageInSubdir = true
       quicklinkPrimary = 'Start Here'
       quicklinkResearch = 'Research Notes'
       quicklinkCreative = 'Creative Works'
+      researchDeskTitle = 'Research Desk'
+      researchDeskDescription = 'Sign in to open my project websites'
     [[languages.en.menu.main]]
       name = 'Home'
       url = '/'
